@@ -9,7 +9,6 @@ app.use(express.json());
 
 app.post('/signup', async (req, res) => {
     const user = new User(req.body);
-    console.log(user);
     try {
         await user.save();
         res.send("User created successfully");
@@ -31,7 +30,7 @@ app.patch('/users', async (req, res) => {
     const userId = req.body.id;
     const data = req.body;
     try {
-        const updatedUser = await User.findByIdAndUpdate(userId, data, {returnDocument: 'after'});
+        const updatedUser = await User.findByIdAndUpdate(userId, data, {returnDocument: 'after', runValidators: true});
         res.send(updatedUser);
     }catch(err) {
         res.status(400).send("Error while updating user " + err.message);
