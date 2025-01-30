@@ -2,11 +2,15 @@ const express = require('express');
 const connectDB = require('./config/database');
 const bcrypt = require('bcrypt');
 const User = require('./models/user');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+const { userAuth } = require('./middlewares/auth');
 
 
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.post('/signup', async (req, res) => {
     try {
@@ -35,44 +39,33 @@ app.post('/signup', async (req, res) => {
 app.post('/login', async (req, res) => {
     try {
         const {email, password} = req.body;
-        const searchedUser = await User.findOne({ email });
-        if(!searchedUser) {
-            return res.status(404).send("Invalid credentials");
-        }
-
-        const isPasswordMatched = await bcrypt.compare(password, searchedUser.password);
-        if(!isPasswordMatched) {
+        const user = await User.findOne({ email });
+        if(!user) {
             throw new Error("Invalid credentials");
         }
 
+        const isPasswordMatched = await user.validatePassword(password);
+        if(!isPasswordMatched) {
+            throw new Error("Invalid credentials");
+        }
+        
+        const token = await user.getJwt();
+        res.cookie('token', token, {expires: new Date(Date.now() + 86400000)});
         res.send("Logged in successfully");
     } catch(err) {
-        res.status(400).send("Error while logging in " + err.message);
+        res.status(400).send("Error while logging in: " + err.message);
     }
 });
 
-app.get('/users', async (req, res) => {
+app.get('/profile', userAuth, async (req, res) => {
     try {
-        const users = await User.find();
-        res.send(users);
-    }catch(err) {
-        res.status(400).send("Error while getting users " + err.message);
-    }
-});
-
-app.get("/user", async (req, res) => {
-    const userEmail = req.body.email;
-  
-    try {
-        const user = await User.find({ email: userEmail });
-        if (!user) {
-            res.status(404).send("User not found");
-        }
+        const user = req.user;
         res.send(user);
-    } catch (err) {
-        res.status(400).send("Something went wrong ");
+    } catch(err) {
+        res.status(400).send("Error while getting profile: " + err.message);
     }
-  });
+});
+
 
 app.patch('/users/:userId', async (req, res) => {
     const userId = req.params?.userId;
@@ -88,16 +81,6 @@ app.patch('/users/:userId', async (req, res) => {
         res.send(updatedUser);
     }catch(err) {
         res.status(400).send("Error while updating user " + err.message);
-    }
-});
-
-app.delete('/users', async (req, res) => {
-    const userId = req.body.id;
-    try {
-        await User.findByIdAndDelete(userId);
-        res.send("User deleted successfully");
-    }catch(err) {
-        res.status(400).send("Error while deleting user " + err.message);
     }
 });
 
