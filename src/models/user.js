@@ -15,6 +15,8 @@ const userSchema = new schema({
         }
     },
     password: String,
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
     age: {type: Number, min: 18}, 
     gender: {type: String, 
         validate(value) {
