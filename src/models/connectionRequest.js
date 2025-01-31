@@ -4,7 +4,7 @@ const schema = mongoose.Schema;
 const connectionRequestSchema = new schema(
     {
         fromUserId: {type: schema.Types.ObjectId, required: true, ref: 'User'},
-        toUserId: {type: schema.Types.ObjectId, required: true},
+        toUserId: {type: schema.Types.ObjectId, required: true, ref: 'User'},
         status: {
             type: String, 
             required: true,
