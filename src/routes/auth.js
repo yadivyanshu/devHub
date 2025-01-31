@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
+const { sendResetEmail } = require('../utils/emailService');
+const crypto = require('crypto');
 
 router.post('/signup', async (req, res) => {
     try {
@@ -26,6 +28,7 @@ router.post('/signup', async (req, res) => {
         res.status(400).send("Error while creating user " + err.message);
     }
 });
+
 
 router.post('/login', async (req, res) => {
     try {
@@ -52,5 +55,50 @@ router.post('/logout', (req, res) => {
     res.clearCookie('token');
     res.send("Logged out successfully");
 });
+
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).send("User with this email does not exist");
+        }
+
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const hashedToken = await bcrypt.hash(resetToken, 10);
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+        await user.save();
+
+        await sendResetEmail(user.email, resetToken);
+
+        res.json({ message: "Password reset link sent to email." });
+    } catch (err) {
+        res.status(500).send("Error sending reset email: " + err.message);
+    }
+});
+
+
+router.post('/reset-password/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { newPassword } = req.body;
+
+        const user = await User.findOne({ resetPasswordExpires: { $gt: Date.now() } });
+        if (!user || !(await bcrypt.compare(token, user.resetPasswordToken))) {
+            return res.status(400).send("Invalid or expired reset token");
+        }
+
+        user.password = await bcrypt.hash(newPassword, 8);
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        res.send("Password reset successful. You can now log in.");
+    } catch (err) {
+        res.status(500).send("Error resetting password: " + err.message);
+    }
+});
+
 
 module.exports = router;
