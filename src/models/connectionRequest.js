@@ -3,7 +3,7 @@ const schema = mongoose.Schema;
 
 const connectionRequestSchema = new schema(
     {
-        fromUserId: {type: schema.Types.ObjectId, required: true},
+        fromUserId: {type: schema.Types.ObjectId, required: true, ref: 'User'},
         toUserId: {type: schema.Types.ObjectId, required: true},
         status: {
             type: String, 
