@@ -45,7 +45,10 @@ router.post('/login', async (req, res) => {
         
         const token = await user.getJwt();
         res.cookie('token', token, {expires: new Date(Date.now() + 86400000)});
-        res.send("Logged in successfully");
+        res.status(200).json({
+            message: "Logged in successfully",
+            user
+        });
     } catch(err) {
         res.status(400).send("Error while logging in: " + err.message);
     }
