@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
-    await mongoose.connect('mongodb+srv://divycic1:div@cluster0.gwxvg.mongodb.net/devhubdb');
+    await mongoose.connect(process.env.MONGODB_URL);
 };
 
 module.exports = connectDB;

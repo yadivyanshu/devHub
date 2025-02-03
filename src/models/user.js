@@ -41,7 +41,7 @@ const userSchema = new schema({
 
 userSchema.methods.getJwt = async function() {  // Arrow function will not work here
     const user = this;
-    const token = await jwt.sign({_id: user._id}, 'TempKey$123', {expiresIn: '1d'});
+    const token = await jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: '1d'});
     return token;
 };
 

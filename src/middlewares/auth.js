@@ -7,7 +7,7 @@ const userAuth = async (req, res, next) => {
         if(!token) {
             return res.status(401).send("Unauthorized");
         }
-        const decodedObj = jwt.verify(token, 'TempKey$123');
+        const decodedObj = jwt.verify(token, process.env.JWT_SECRET);
         const userId = decodedObj._id;
         const user = await User.findById(userId);
         if(!user) {
