@@ -5,7 +5,7 @@ const userAuth = async (req, res, next) => {
     try {
         const {token} = req.cookies;
         if(!token) {
-            throw new Error("Invalid token !");
+            return res.status(401).send("Unauthorized");
         }
         const decodedObj = jwt.verify(token, 'TempKey$123');
         const userId = decodedObj._id;
