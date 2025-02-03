@@ -22,8 +22,14 @@ router.post('/signup', async (req, res) => {
             password: hashedPassword
         });
 
-        await user.save();
-        res.send("User created successfully");
+        const savedUser = await user.save();
+
+        const token = await savedUser.getJwt();
+        res.cookie('token', token, {expires: new Date(Date.now() + 86400000)});
+        res.status(201).json({
+            message: "User created successfully",
+            data: savedUser
+        });
     }catch(err) {
         res.status(400).send("Error while creating user " + err.message);
     }
