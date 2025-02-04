@@ -25,14 +25,13 @@ const createSendEmailCommand = (toAddress, fromAddress, subject, body) => {
         },
         Source: fromAddress,
         ReplyToAddresses: [
-        /* more items */
         ],
     });
 };
 
 const run = async (subject, body) => {
     const sendEmailCommand = createSendEmailCommand(
-        "divycic1@gmail.com",
+        "divycic3@gmail.com",
         "info@devhub.work",
         subject,
         body
