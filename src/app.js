@@ -4,7 +4,9 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 require('dotenv').config();
 const app = express();
+const http = require('http');
 require("./utils/cronJob");
+const initializeSocket = require("./utils/socket");
 
 app.use(cors({
     origin: 'http://localhost:5173',
@@ -17,16 +19,21 @@ const authRouter = require('./routes/auth');
 const profileRouter = require('./routes/profile');
 const requestRouter = require('./routes/request');
 const userRouter = require('./routes/user');
+const chatRouter = require("./routes/chat");
 
 app.use('/', authRouter);   
 app.use('/', profileRouter);
 app.use('/', requestRouter);
 app.use('/', userRouter);
+app.use("/", chatRouter);
+
+const server = http.createServer(app);
+initializeSocket(server);
 
 connectDB()
     .then(() => {
         console.log('Database connected');
-        app.listen(3000, () => {
+        server.listen(3000, () => {
             console.log('Server is running on port 3000');
         });
     })
