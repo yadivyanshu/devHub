@@ -3,6 +3,7 @@ const { userAuth } = require('../middlewares/auth');
 const ConnectionRequest = require('../models/connectionRequest');
 const User = require('../models/user');
 const router = express.Router();
+const redis = require('../utils/redis');
 
 const USER_SAFE_FIELDS = 'firstName lastName photoUrl age gender about skills';
 
@@ -86,6 +87,41 @@ router.get('/feed', userAuth, async (req, res) => {
         });
     } catch(err) {
         res.status(400).send("Error while fetching feed: " + err.message);
+    }
+});
+
+router.get("/user/online-status", userAuth, async (req, res) => {
+    try {
+        const loggedInUser = req.user;
+
+        const connections = await ConnectionRequest.find({
+            $or: [
+                { fromUserId: loggedInUser._id, status: "accepted" },
+                { toUserId: loggedInUser._id, status: "accepted" },
+            ],
+        }).select("fromUserId toUserId");
+
+        const friendIds = connections.map((connection) =>
+            connection.fromUserId.toString() === loggedInUser._id.toString()
+                ? connection.toUserId
+                : connection.fromUserId
+        );
+
+        const onlineFriends = await redis.smembers("onlineUsers");
+        console.log('Online Friends:', onlineFriends);
+
+        const onlineStatuses = friendIds.map((friendId) => ({
+            userId: friendId,
+            isOnline: onlineFriends.includes(friendId.toString()),
+        }));
+
+        res.status(200).json({
+            message: "Online status fetched successfully",
+            data: onlineStatuses,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error fetching online status: " + err.message);
     }
 });
 

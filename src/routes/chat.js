@@ -6,7 +6,8 @@ const User = require("../models/user");
 const chatRouter = express.Router();
 
 chatRouter.get("/chat/:targetUserId", userAuth, async (req, res) => {
-    const { targetUserId } = req.params;
+    const { page = 1, limit = 10 } = req.query; 
+    const targetUserId = req.params.targetUserId;
     const userId = req.user._id;
 
     try {
@@ -24,10 +25,15 @@ chatRouter.get("/chat/:targetUserId", userAuth, async (req, res) => {
             await chat.save();
         }
 
+           // Paginate messages
+        const paginatedMessages = chat.messages
+            .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)) 
+            .slice((page - 1) * limit, page * limit);
+
         const targetUserDetails = await User.findById(targetUserId).select("firstName lastName");
         const targetUserFullName = targetUserDetails.firstName + " " + targetUserDetails.lastName;
         res.status(200).json({
-            chat,
+            chat: paginatedMessages,
             targetUser: targetUserFullName
         });
     } catch (err) {
