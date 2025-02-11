@@ -1,4 +1,4 @@
-# DevHub
+# [DevHub](https://devhub.work/)
 
 DevHub is a full-stack social networking platform designed for developers and engineers to connect, send and accept connection requests, and interact through a dynamic feed. The platform is built for scalability, offering features such as real-time chat, AI-generated profile recommendations, and advanced user authentication.
 
